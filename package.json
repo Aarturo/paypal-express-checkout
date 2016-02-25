@@ -1,5 +1,5 @@
 {
-  "name": "paypal-express-checkout-simple",
+  "name": "paypal-express-checkout-dt",
   "version": "1.0.0",
   "description": "Simple implementation of paypal express checkout so you can quickly start using Paypal. Supports only basics to sell items.",
   "main": "./index.js",
@@ -10,9 +10,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/visla/paypal-express-checkout"
+    "url": "https://github.com/Aarturo/paypal-express-checkout"
   },
-  "author": "Nebojsa Vislavski",
+  "author": "Arturo Castillo",
   "dependencies": {
     "body-parser": "^1.12.3",
     "cookie-parser": "~1.0.1",
