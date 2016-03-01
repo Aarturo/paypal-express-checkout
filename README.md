@@ -21,115 +21,270 @@ npm install paypal-express-checkout-simple
 1. Run npm test to make sure everything works fine.
 
 ## Usage
+This is how we implement this component, any improvement is welcoming.
 
-Checkout example/app.js code which is using express. But here are some steps:
-
-1. Place paypal checkout button on your website. When clicked on that button redirect to your 'pay' handler. (in this example app.post('/pay') was used)
-2. Call setExpressCheckoutPayment with required details or call setProducts and setPayOptions before
-3. Redirect to the url provided in callback of setExpressCheckoutPayment. 
-4. User will approve or cancel payment on paypal redirecting back to redirectUrl or cancelUrl
-5. If redirectUrl was used make GET handler (in the example its /paypal/success) and call getExpressCheckoutDetails (set second param to be true as you most likely wish to charge immediately). your redirectUrl will have this query values given from paypal ?TOKEN=<something>&PayerID=<payerId>
-6. Success of getExpressCheckoutDetails will return object you can store as charge details.  
-
-## How are we using paypal-express-checkout-simple component with angularjs:
-
-1. When user clicks on PayPal button it makes REST POST call to /paypal/set-express-checkout url.
-```
-var request = {
-     method: 'POST',
-     url:  ApiEndpoint + '/paypal/set-express-checkcout',
-     headers: {
-       'Content-Type': 'application/json',
-     },
-     data: {
-     	email: email,
-     	discountCode: discountCode,
-     	products: products,
-     	successUrl: successUrl, // successUrl is something like - http://www.mysite.com/#/paypal/execute-charge
-     	cancelUrl: cancelUrl,
-     }
-};
-
-return $http(request);	
-```
-2. Server when it gets POST request to /paypal/set-express-checkout does something like this 
+1. SetExpressCheckout: the server gets POST request to setExpressCheckout
 ```
 /**
- * Paypal checkout. Reacts on /paypal/set-express-checkout
- * @param  {[type]} req [description]
- * @param  {[type]} res [description]
- * @return {[type]}     [description]
+ * Set the buy parameters.
+ * 
+ * @param {object}   req
+ * @param {object}   res
+ * @param {Function} next
+ * @return {json}
  */
-function paypalCheckout(orderData, req, res) {
-	var cancelUrl = req.body.cancelUrl;
-	var successUrl = req.body.successUrl;
+export function setExpressCheckOut(req, res, next){		
+ 
+	let paypal = PayPal.create(
+		config.paypalUser, 
+		config.paypalPass, 
+		config.paypalSignature, 
+		config.paypalSandbox
+	)
 
-	var paypal = PayPal.create(GLOBAL.config.paypal.apiUsername, GLOBAL.config.paypal.apiPassword, GLOBAL.config.paypal.signature, GLOBAL.config.paypal.sandbox);
-	paypal.setPayOptions(GLOBAL.config.paypal.brandName, null, GLOBAL.config.paypal.logoUrl);
+	paypal.setPayOptions(
+		config.paypalBrandName, 
+		null, 
+		config.paypalLogoUrl
+	)
+ 	
+ 	//TODO make a function for this
+ 	//seting billing type as RecurringPayments
+ 	paypal.payOptions["L_BILLINGTYPE0"] = "RecurringPayments"
+ 	paypal.payOptions["L_BILLINGAGREEMENTDESCRIPTION0"] = req.body.product.description
 
-	var paypalItems = _.map(orderData.products, function(item) {
-		return {
-			name: item.name,
-			description: item.description,
-			quantity: item.userOptions.quantity,
-			amount: item.price,
-		};
-	});
-
+	let paypalItems = {
+		name: req.body.product.name,
+		description: req.body.product.description,
+		quantity: 1,
+		amount: req.body.product.amount,
+		days: req.body.product.days
+	}
+ 	
 	paypal.setProducts(paypalItems);
+ 	
+ 	let paymentEnding = moment().add(req.body.product.days, "days")
+ 	let order = uuid.v4()
 
 	paypal.setExpressCheckoutPayment(
-		orderData.email, 
-		orderData.orderId, 
-		orderData.totalDiscountedPrice, 
-		'', 
+		req.body.email, 
+		order, 
+		req.body.product.amount, 
+		req.body.product.description, 
 		'USD', 
-		successUrl, 
-		cancelUrl, 
+		config.paypalSuccessUrl, 
+		config.paypalCancelUrl, 
 		false,
 		function(err, data) {
-			if (err) {
-				logger.error('paypal seting express checkout payment failed.', err);
-				res.status(500).send('Error setting paypal payment');
-				return;
+			if (err) {				
+				res.status(500).json({success: false, message: err})
 			}
 
-			GLOBAL.dbConnection.query('INSERT INTO paypal_order_data (token, order_data) VALUES (?, ?)', [data.token, JSON.stringify(orderData)], function(err) {
-				if (err) {
-					logger.error('Storing paypal_order_data for orderId: %s with token: %s', orderData.orderId, data.token);
-					return res.status(500).send('Error setting paypal payment. Failed storing order data.');
-				}
+ 			User.findOne({_id: req.body.user}).exec(function (err, userFound){
+ 				if (err) {
+ 					res.status(500).json({success: false, message: err})
+ 				} else {
+ 					let payment = new Payment({
+ 						user: req.body.user,
+ 						starting: new Date(),
+			            ending: paymentEnding,
+			            fee: req.body.product.amount,
+			            type: 1,
+			            status: 2,
+			            system_payment: {
+			            	SYSTEM: "paypal",
+			            	TOKEN: data.token,
+			 	           	INVNUM: order
+			            }
+ 					})
 
-				res.send({ redirectUrl: redirectUrl });
-			});
-	});
+ 					payment.save(function (erro, newPayment){
+ 						if (erro) {
+ 							res.status(500).json({success: false, message: erro})
+ 						} else {
+ 							res.redirect(data.redirectUrl)
+ 						}
+ 					})
+ 				}
+ 			}) 						
+		}
+	)
+}
+```
+2. With the result from SetExpressCheckOut you can show the result or redirect to GetExpressCheckOutDetails like in this example.
+```
+/**
+ * Charge and get the details.
+ * 
+ * @param  {object}   req
+ * @param  {object}   res
+ * @param  {Function} next
+ * @return {json}
+ */
+export function getExpressCheckoutDetails(req, res, next){
+	let paypal = PayPal.create(
+		config.paypalUser, 
+		config.paypalPass, 
+		config.paypalSignature, 
+		true
+	)
+	
+	paypal.getExpressCheckoutDetails(req.query.token, true, function(err, data) {
+		/* update the info in payment system whether is successfully or not */
+		data["SYSTEM"] = "Paypal"		
+		let status = 0		
+		if (data.PAYMENTINFO_0_ACK === 'Success' && data.PAYMENTINFO_0_PAYMENTSTATUS === 'Completed') {
+			status = 1
+		} else if (data.PAYMENTINFO_0_ACK === 'Success' && data.PAYMENTINFO_0_PAYMENTSTATUS === 'Pending') {
+			status = 2			
+		}
+		Payment.findOneAndUpdate(
+			{"system_payment.INVNUM": data.INVNUM},
+			{$set: {status: status, system_payment: data}},				
+			{new: 1},
+			function (erro, updatedPayment) {
+				if (erro){
+					res.status(500).json({success: false, message: erro, paypal_error: err})
+				} else {
+					/* check the error from express checkout */
+					if (err) {
+						res.status(500).json({success: false, message: err})
+					} else {
+						if (updatedPayment){
+							/* check if the payment is compelete */
+							let updatedoc = {}
+							let _message = ''
+							if (data.PAYMENTINFO_0_ACK === 'Success' && data.PAYMENTINFO_0_PAYMENTSTATUS === 'Completed') {								
+								updatedoc = {$set: {usertype: 2, payment: updatedPayment._id}}
+								_message = "Payment successfuly done"
+							} else if (data.PAYMENTINFO_0_ACK === 'Success' && data.PAYMENTINFO_0_PAYMENTSTATUS === 'Pending') {								
+								updatedoc = {$set: {payment: updatedPayment._id}}
+								_message = "Payment in review"
+							}														
+							/* update the user type to vip */
+							User.findOneAndUpdate(
+								{_id: updatedPayment.user},
+								updatedoc,
+								{new: 1},
+								function (error, updatedUser){
+									if (error) {
+										res.status(500).json({success: false, message: error})
+									} else {
+										if (updatedUser){
+											res.json({success: true, message: _message, data: JSON.stringify(data)})
+										} else {
+											res.status(409).json({success: true, message: "User don't found"})				
+										}
+									}
+								}
+							)								
+						} else {
+							res.status(409).json({success: true, message: "Payment don't found", paypal_error: err})
+						}
+					}
+				}
+			}
+		)
+	})
 }
 ``` 
-3. Client gets redirectUrl and does `window.location = response.data.redirectUrl`
-4. Users will now see paypal page. Once everything is successful it will go to url like this one: http://www.mysite.com/#/paypal/execute-charge
-5. When client sees "http://www.mysite.com/#/paypal/execute-charge" this one will have ?TOKEN=token&PayerID=something set from PayPal. This controller has code that looks like this:
+3. How we manage the pending payments. We create a cronjob wich run every 4 hours.
 ```
-var query = $location.search();
+/**
+ * Check if the pending transaction are now completed
+ * @param  {object}   req  [description]
+ * @param  {object}   res  [description]
+ * @param  {Function} next [description]
+ * @return {json}        [description]
+ */
+export function checkPendingPaypal(req, res, next) {
 
-if (!query.token) {
-	$scope.errorMessage = 'This call is not made from PayPal. Report this issue to support.';
-} else {
-	DataProvider.paypalSuccess(query.token).then(function(response) { // This one will call getExpressCheckoutDetails on server and perform actual charge
-		if (response.status === 200) {
-			// Successful checkout, go to order success.
-			$location.path('/order-processed/' + response.data.orderId);
+	let last24hrs = moment().subtract(24,"hours")	
+	let query = {created_at: {$gte: new Date(last24hrs.format()), $lte: new Date()}, status: 2}
+
+	Payment.find(query).exec(function (err, foundPayments){
+		if (err) {
+			res.status(500).json({success: false, message: err})
 		} else {
-			$scope.errorMessage = 'Error executing paypal.' + query.token;
+			for (let i in foundPayments) {
+				
+				let paypal = PayPal.create(
+					config.paypalUser, 
+					config.paypalPass, 
+					config.paypalSignature, 
+					true
+				)
+
+				if (typeof foundPayments[i].system_payment.PAYMENTINFO_0_TRANSACTIONID !== 'undefined') {
+					paypal.getTransactionDetails(foundPayments[i].system_payment.PAYMENTINFO_0_TRANSACTIONID, function(err, data) {						
+						if (err) {
+							console.log(err)
+						} else {
+							if (data.PAYMENTSTATUS === 'Completed') {
+
+								Payment.findOneAndUpdate(
+									{"system_payment.PAYMENTINFO_0_TRANSACTIONID": data.TRANSACTIONID},
+									{$set: {status: 1, "system_payment.PAYMENTINFO_0_PAYMENTSTATUS": "Completed", "system_payment.PAYMENTINFO_0_PENDINGREASON": data.PENDINGREASON}},				
+									{new: 1},
+									function (erro, updatedPayment) {
+										if (erro){									
+											console.log("mongo: " + erro + "paypal: " + err)
+										} else {
+											/* check the error from express checkout */
+											if (err) {										
+												console.log("paypal: " + err)
+											} else {
+												if (updatedPayment){																									
+													/* update the user type to vip */
+													User.findOneAndUpdate(
+														{_id: updatedPayment.user},
+														{$set: {usertype: 2}},
+														{new: 1},
+														function (error, updatedUser){
+															if (error) {														
+																console.log("mongo: " + error)
+															} else {
+																if (updatedUser){
+																	console.log("Updated successfully payment: " + data.TRANSACTIONID)
+																} else {
+																	console.log("User don't found can't updated his user type")
+																}
+															}
+														}
+													)								
+												} else {											
+													console.log("Payment don't found can't updated his status")
+												}
+											}
+										}
+								})
+							}
+						}
+					})
+				}		
+			}
+			res.json({success: true, message: "Revision pending done"})
 		}
-	}).catch(function() {
-		$scope.errorMessage = 'Error performing paypalSuccess request' + query.token;
-	});	
-} 
+	})
+}	
 ```
-6. Server will create paypal object with appropriate credentials, and call getExpressCheckoutDetails with provided token.
+4. Additionally if you want the add some other pay options do it in this way.
+### for instance you can set the billing type.
+```
+	//old way
+	paypal.setPayOptions(
+		"BrandName", 
+		null, 
+		"URLLOGO"
+	)
+	//new feature to add pay options, you can combine the two
+	var options = [
+		{name: "L_BILLINGTYPE0", value: "RecurringPayments"},
+		{name: "L_BILLINGAGREEMENTDESCRIPTION0", value: "Silly description"}
+	]
 
-This is simplified version of how we implemented this component. 
-
+	paypal.addPayOption(options);
+```
 ## 
 Please feel free to comment and contribute.
 

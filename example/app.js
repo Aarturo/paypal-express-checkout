@@ -1,7 +1,7 @@
 'use strict';
 
 var express = require('express');
-var favicon = require('static-favicon');
+var favicon = require('serve-favicon');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var path = require('path');
@@ -13,7 +13,7 @@ var PayPal = require('../index');
 var returnUrl = 'http://localhost:8893/paypal/success';
 var cancelUrl = 'http://localhost:8893/paypal/cancel';
 
-app.use(favicon());
+// app.use(favicon());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  */
 app.post('/pay', function(req, res) {
 	// create paypal object in sandbox mode. If you want non-sandbox remove tha last param.
-	var paypal = PayPal.create(process.env.API_USERNAME, process.env.API_PASSWORD, process.env.SIGNATURE, true);
+	var paypal = PayPal.create('aacg1986_api1.gmail.com', 'MBMGVCUBQSK8CP4Y', 'AFcWxV21C7fd0v3bYYYRCpSSRl31ApxojvTYwZSnayAoCZasawzkvo4P', true);
 	paypal.setPayOptions('ACME Soft', null, process.env.logoImage, '00ff00', 'eeeeee');
 
 	paypal.setProducts([{ 
@@ -36,7 +36,7 @@ app.post('/pay', function(req, res) {
 		quantity: 1, 
 		amount: 100.99 
 	}]);
-
+    paypal.addPayOption('', '')
 	// Invoice must be unique.
 	var invoice = uuid.v4();
 	paypal.setExpressCheckoutPayment(
@@ -79,7 +79,7 @@ app.get('/paypal/success', function(req, res) {
 		res.send('Successfuly payment, ' + resObj);
 	});
 });
-	
+
 /// catch 404 and forwarding to error handler
 app.use(function(req, res) {
 	res.status(404).send('Unknown page');
