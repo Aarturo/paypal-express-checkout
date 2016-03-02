@@ -7,7 +7,7 @@ Whether you are using angularjs or any single page app or you just serve your ht
 
 ## Installation
 
-npm install paypal-express-checkout-simple
+npm install paypal-express-checkout-dt
 
 ## Examples
 
@@ -18,7 +18,7 @@ npm install paypal-express-checkout-simple
 
 ## Tests
 
-1. Run npm test to make sure everything works fine.
+Run npm test to make sure everything works fine.
 
 ## Usage
 This is how we implement this component, any improvement is welcoming.
