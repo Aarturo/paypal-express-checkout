@@ -1,4 +1,11 @@
 # paypal-express-checkout-simple
+
+[![npm version](https://img.shields.io/npm/v/paypal-express-checkout-dt.svg?style=flat-square)](https://www.npmjs.com/package/paypal-express-checkout-dt)
+[![npm downloads](https://img.shields.io/npm/dm/paypal-express-checkout-dt.svg?style=flat-square)](https://www.npmjs.com/package/paypal-express-checkout-dt)
+[![dependency Status](https://img.shields.io/david/Aarturo/paypal-express-checkout-dt.svg?style=flat-square)](https://david-dm.org/Aarturo/paypal-express-checkout-dt#info=dependencies)
+[![Build Status](https://img.shields.io/travis/Aarturo/paypal-express-checkout-dt.svg?style=flat-square)](https://travis-ci.org/Aarturo/paypal-express-checkout-dt)
+[![devDependency Status](https://img.shields.io/david/dev/Aarturo/paypal-express-checkout-dt.svg?style=flat-square)](https://david-dm.org/Aarturo/paypal-express-checkout-dt#info=devDependencies)
+
 PayPal Express Checkout implementation in Node.JS
 
 If you got confused by PayPal instructions, 
