@@ -24,7 +24,9 @@
     "example": "example",
     "test": "test"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  },
   "keywords": [
     "paypal",
     "express",
