@@ -17,9 +17,9 @@
     "underscore": "^1.8.3"
   },
   "bugs": {
-    "url": "https://github.com/visla/paypal-express-checkout/issues"
+    "url": "https://github.com/Aarturo/paypal-express-checkout/issues"
   },
-  "homepage": "https://github.com/visla/paypal-express-checkout",
+  "homepage": "https://github.com/Aarturo/paypal-express-checkout",
   "directories": {
     "example": "example",
     "test": "test"
