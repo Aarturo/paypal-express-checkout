@@ -23,7 +23,7 @@ describe('Test paypal-express-checkout', function() {
 
 	var fakeRequest = {
 		end: function(params) {
-			console.log('Body of request: ', params);
+			// console.log('Body of request: ', params);
 		},
 		setTimeout: function() {
 			// nothing here. Never timeout. 
@@ -33,7 +33,7 @@ describe('Test paypal-express-checkout', function() {
 	beforeEach(function(done) {
 		// Mock http.request call.
 		https.request = function(options, callback) {
-			console.log('Options: ', options);
+			// console.log('Options: ', options);
 			// return fake response.
 			setTimeout(function() {
 				callback(fakeResponse);
@@ -59,7 +59,7 @@ describe('Test paypal-express-checkout', function() {
 
 		var paypal = Paypal.create('username', 'pswd', 'signature');
 		paypal.setExpressCheckoutPayment('test@email.com', '001', 1000.99, 'Some description', 'USD', 'returnUrl', 'cancelUrl', false, function(err, data) {
-			console.log('Redirect to paypal: ' + data.redirectUrl);
+			// console.log('Redirect to paypal: ' + data.redirectUrl);
 			assert.ok(data.redirectUrl.indexOf('new_token') !== -1);
 			done();
 		});
@@ -87,7 +87,7 @@ describe('Test paypal-express-checkout', function() {
 		paypal.setPayOptions('MyBrand', 'http://hdrimage.jpg', 'http://logoimg.jpg', 'ff00ff', 'ffffff');
 
 		paypal.setExpressCheckoutPayment('test@email.com', '001', 1000.99, 'Some description', 'USD', 'returnUrl', 'cancelUrl', false, function(err, data) {
-			console.log('Redirect to paypal: ' + data.redirectUrl);
+			// console.log('Redirect to paypal: ' + data.redirectUrl);
 			assert.ok(data.redirectUrl.indexOf('new_token') !== -1);
 			done();
 		});
@@ -137,7 +137,7 @@ describe('Test paypal-express-checkout', function() {
 			]);
 
 		paypal.setExpressCheckoutPayment('test@email.com', '001', 1000.99, 'Some description', 'USD', 'returnUrl', 'cancelUrl', false, function(err, data) {
-			console.log('Redirect to paypal: ' + data.redirectUrl);
+			// console.log('Redirect to paypal: ' + data.redirectUrl);
 			assert.ok(data.redirectUrl.indexOf('new_token') !== -1);
 			done();
 		});
