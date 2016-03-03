@@ -12,8 +12,8 @@ npm install paypal-express-checkout-dt
 ## Examples
 
 ### Simplest example
-1. Update example/app.js with your paypal sandbox credentials
-2. Run "npm run-script example" and go to http://localhost:8893/index.html
+1. Set your paypal sandbox credentials runnning: `export API_USERNAME=your_username && export API_PASSWORD=your_password && export SIGNATURE=your_signature`
+2. Run `cd example && npm i && npm start` and go to http://localhost:8893/index.html
 3. you will see the full paypal flow 
 
 ## Tests
