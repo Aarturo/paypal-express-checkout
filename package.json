@@ -14,22 +14,19 @@
   },
   "author": "Arturo Castillo",
   "dependencies": {
-    "body-parser": "^1.12.3",
-    "cookie-parser": "~1.0.1",
-    "express": "^4.12.3",
-    "node-uuid": "^1.4.3",
-    "serve-favicon": "^2.2.0",
     "underscore": "^1.8.3"
   },
   "bugs": {
-    "url": "https://github.com/visla/paypal-express-checkout/issues"
+    "url": "https://github.com/Aarturo/paypal-express-checkout/issues"
   },
-  "homepage": "https://github.com/visla/paypal-express-checkout",
+  "homepage": "https://github.com/Aarturo/paypal-express-checkout",
   "directories": {
     "example": "example",
     "test": "test"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  },
   "keywords": [
     "paypal",
     "express",
