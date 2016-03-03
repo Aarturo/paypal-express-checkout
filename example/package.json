@@ -1,0 +1,20 @@
+{
+  "name": "paypal-express-checkout-dt-example",
+  "version": "1.0.0",
+  "description": "Example app for paypal-express-checkout-dt",
+  "main": "./app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "license": "MIT",
+  "author": "Arturo Castillo",
+  "dependencies": {
+    "body-parser": "^1.12.3",
+    "cookie-parser": "~1.0.1",
+    "express": "^4.12.3",
+    "node-uuid": "^1.4.3",
+    "serve-favicon": "^2.2.0",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {}
+}
