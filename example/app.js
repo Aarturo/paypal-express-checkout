@@ -12,6 +12,9 @@ var PayPal = require('../index');
 // TODO: Put your PayPal settings here:
 var returnUrl = 'http://localhost:8893/paypal/success';
 var cancelUrl = 'http://localhost:8893/paypal/cancel';
+var username = process.env.API_USERNAME;
+var password = process.env.API_PASSWORD;
+var signature = process.env.SIGNATURE;
 
 // app.use(favicon());
 app.use(bodyParser.json());
@@ -27,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  */
 app.post('/pay', function(req, res) {
 	// create paypal object in sandbox mode. If you want non-sandbox remove tha last param.
-	var paypal = PayPal.create('aacg1986_api1.gmail.com', 'MBMGVCUBQSK8CP4Y', 'AFcWxV21C7fd0v3bYYYRCpSSRl31ApxojvTYwZSnayAoCZasawzkvo4P', true);
+	var paypal = PayPal.create(username, password, signature, true);
 	paypal.setPayOptions('ACME Soft', null, process.env.logoImage, '00ff00', 'eeeeee');
 
 	paypal.setProducts([{ 
